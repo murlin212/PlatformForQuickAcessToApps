@@ -447,26 +447,14 @@
             Background="#131313"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" 
-            Margin="230,74,0.4,-0.2"
+            Margin="230,74,0,0"
             Visibility="Visible">
 
             <ScrollViewer x:Name="scroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden">
 
                 <Grid x:Name="CardGrid">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="300"/>
-                        <ColumnDefinition Width="300"/>
-                        <ColumnDefinition Width="300"/>
-                        <ColumnDefinition Width="300"/>
-                        <ColumnDefinition Width="300"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="100"/>
-                        <RowDefinition Height="430"/>
-                        <RowDefinition Height="430"/>
-                        <RowDefinition Height="430"/>
-                        <RowDefinition Height="430"/>
                         <RowDefinition />
                     </Grid.RowDefinitions>
                 </Grid>
@@ -483,7 +471,7 @@
                     VerticalAlignment="Top"
                     Cursor="Hand"
                     Margin="0,15,45,0"
-                    Click="AddButton_Click" Grid.Row="1"
+                    Click="AddButton_Click" Grid.Row="0"
                     BorderThickness="0"
                     Opacity="0.5">
 
@@ -545,7 +533,7 @@
                 <TextBox            
                     Tag="Enter your search..." 
                     HorizontalAlignment="Left"
-                    Grid.Row="1"
+                    Grid.Row="0"
                     VerticalAlignment="Top"
                     Margin="40,-40,0,0"
                     TextChanged="TextBox_TextChanged"                  
@@ -566,7 +554,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" 
             Margin="230,74,0.4,-0.2"
-            Visibility="Hidden">
+            Visibility="Visible">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -587,7 +575,7 @@
                 </Grid>
             </StackPanel>
 
-            <TextBlock Foreground="#FFB3B3B3" FontSize="15" Grid.Row="1" HorizontalAlignment="Center">*Note that everything will be scaled down or up,depending on the given resolution.</TextBlock>
+            <TextBlock Foreground="#FFB3B3B3" FontSize="15" Grid.Row="1" HorizontalAlignment="Center">*Note that, you can only scale the window when it is not in maximized mode!</TextBlock>
         </Grid>
 
         <Grid
@@ -598,7 +586,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" 
             Margin="230,74,0.4,-0.2"
-            Visibility="Hidden">
+            Visibility="Visible">
 
             <Viewbox StretchDirection="DownOnly" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Foreground="#FFB3B3B3" TextAlignment="Center" FontSize="30" TextWrapping="Wrap" >

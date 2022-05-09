@@ -27,6 +27,8 @@ namespace GameLauncher
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        private const int COL_WIDTH = 300;
+        private const int ROW_HEIGHT = 430;
         private int col;
         private int row;
         private SQLiteConnection sqlite_conn;
@@ -34,6 +36,7 @@ namespace GameLauncher
         private List <LibraryItemCard> cards;
         private double workAreaHight;
         private double workAreaWidth;
+        private int maxColPerRow;
 
         private int _height;
         public int CustomHeight
@@ -74,14 +77,20 @@ namespace GameLauncher
             dropdown.Width = 0;
             settings.Width = 0;
             aboutinfo.Width = 0;
-            this.col = 0;
-            this.row = 1;
+            maxColPerRow = (int)(SystemParameters.PrimaryScreenWidth - NavbarPanel.Width) / COL_WIDTH;
+            this.col = maxColPerRow;
+            this.row = 0;
 
             CustomHeight = (int)SystemParameters.PrimaryScreenHeight;
             CustomWidth = (int)SystemParameters.PrimaryScreenWidth;
 
             workAreaHight = SystemParameters.WorkArea.Height;
             workAreaWidth = SystemParameters.WorkArea.Width;
+
+            for (int i = 0; i < maxColPerRow; i++)
+            {
+                CardGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(COL_WIDTH) });
+            }
 
             sqlite_conn = new SQLiteConnection("Data Source = database.db; Version = 3; New = True; Compress = True; ");
             cards = new List<LibraryItemCard>();
@@ -151,7 +160,7 @@ namespace GameLauncher
 
         private void LibraryToggle_Checked(object sender, RoutedEventArgs e)
         {
-            DoubleAnimation widthAnimation = new DoubleAnimation(workAreaWidth - 230, new Duration(TimeSpan.FromSeconds(0.2)));
+            DoubleAnimation widthAnimation = new DoubleAnimation(CustomWidth - 230, new Duration(TimeSpan.FromSeconds(0.2)));
             dropdown.BeginAnimation(WidthProperty, widthAnimation);
             widthAnimation = new DoubleAnimation(0, new Duration(TimeSpan.FromSeconds(0.2)));
 
@@ -204,7 +213,13 @@ namespace GameLauncher
             SQLiteCommand ins_cmd = sqlite_conn.CreateCommand();
 
 
-            ins_cmd.CommandText = $"INSERT INTO CardData VALUES ({card.Id}, '{card.GameTitle.Text}', '{card.ExecPlayPath}', '{card.ImgPath}');";
+            ins_cmd.CommandText = $"INSERT INTO CardData VALUES (@id, @gameTItle, @execPlayPath, @imgPath);";
+            ins_cmd.Parameters.AddWithValue("@id", card.Id);
+            ins_cmd.Parameters.AddWithValue("@gameTitle", card.GameTitle.Text);
+            ins_cmd.Parameters.AddWithValue("@execPlayPath", card.ExecPlayPath);
+            ins_cmd.Parameters.AddWithValue("@imgPath", card.ImgPath);
+            ins_cmd.Prepare();
+
             ins_cmd.ExecuteNonQuery();
 
             sqlite_conn.Close();
@@ -252,21 +267,22 @@ namespace GameLauncher
         private void ResetGrid()
         {
             CardGrid.Children.Clear();
-            col = 0;
-            row = 1;
+            col = maxColPerRow;
+            row = 0;
         }
 
         private void UpdateGrid(LibraryItemCard card)
         {
-            CardGrid.Children.Add(card);
-            Grid.SetColumn(card, col++);
-            Grid.SetRow(card, row);
-
-            if (col >= 5)
+            if (col >= maxColPerRow)
             {
+                CardGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(ROW_HEIGHT) });
                 row++;
                 col = 0;
             }
+
+            CardGrid.Children.Add(card);
+            Grid.SetColumn(card, col++);
+            Grid.SetRow(card, row);            
         }
 
         private void CardDeleteHandler(object sender, RoutedEventArgs e)
@@ -274,14 +290,19 @@ namespace GameLauncher
             ResetGrid();
             cards.Remove(sender as LibraryItemCard);
             cards.ForEach(el => UpdateGrid(el));
+
+            DeleteDataBase(sender as LibraryItemCard);
         }
 
-        public void DeleteDataBase(LibraryItemCard card)
+        private void DeleteDataBase(LibraryItemCard card)
         {
             sqlite_conn.Open();
             SQLiteCommand ins_cmd = sqlite_conn.CreateCommand();
 
-            ins_cmd.CommandText = $"DELETE FROM CardData WHERE id={card.Id};";
+            ins_cmd.CommandText = $"DELETE FROM CardData WHERE id=@id;";
+            ins_cmd.Parameters.AddWithValue("@id", card.Id);
+            ins_cmd.Prepare();
+
             ins_cmd.ExecuteNonQuery();
 
             sqlite_conn.Close();
@@ -289,7 +310,7 @@ namespace GameLauncher
 
         private void SettingsToggle_Checked(object sender, RoutedEventArgs e)
         {
-            DoubleAnimation widthAnimation = new DoubleAnimation(workAreaWidth - 230, new Duration(TimeSpan.FromSeconds(0.2)));
+            DoubleAnimation widthAnimation = new DoubleAnimation(CustomWidth - 230, new Duration(TimeSpan.FromSeconds(0.2)));
             settings.BeginAnimation(WidthProperty, widthAnimation);
 
             widthAnimation = new DoubleAnimation(0, new Duration(TimeSpan.FromSeconds(0.2)));
@@ -308,7 +329,7 @@ namespace GameLauncher
 
         private void AboutInfoToggle_Checked(object sender, RoutedEventArgs e)
         {
-            DoubleAnimation widthAnimation = new DoubleAnimation(workAreaWidth - 230, new Duration(TimeSpan.FromSeconds(0.2)));
+            DoubleAnimation widthAnimation = new DoubleAnimation(CustomWidth - 230, new Duration(TimeSpan.FromSeconds(0.2)));
             aboutinfo.BeginAnimation(WidthProperty, widthAnimation);
 
             widthAnimation = new DoubleAnimation(0, new Duration(TimeSpan.FromSeconds(0.2)));
@@ -335,26 +356,66 @@ namespace GameLauncher
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            CustomHeight = 1080;
-            CustomWidth = 1920;
+            CustomHeight = (int)SystemParameters.PrimaryScreenHeight;
+            CustomWidth = (int)SystemParameters.PrimaryScreenWidth;
+
+            if (CustomWidth < 1920 || CustomHeight < 1080)
+            {
+                MessageBox.Show("Display doesn't support these window parameters!", "Resolution error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                CustomHeight = 1080;
+                CustomWidth = 1920;
+            }
         }
 
         private void MenuItem_Click_1(object sender, RoutedEventArgs e)
-        {   
-            CustomWidth = 1600;
-            CustomHeight = 900;
+        {
+            CustomHeight = (int)SystemParameters.PrimaryScreenHeight;
+            CustomWidth = (int)SystemParameters.PrimaryScreenWidth;
+
+            if (CustomWidth < 1600 || CustomHeight < 900)
+            {
+                MessageBox.Show("Display doesn't support these window parameters!", "Resolution error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                CustomWidth = 1600;
+                CustomHeight = 900;
+            }
         }
 
         private void MenuItem_Click_2(object sender, RoutedEventArgs e)
         {
-            CustomWidth = 1366;
-            CustomHeight = 768;
+            CustomHeight = (int)SystemParameters.PrimaryScreenHeight;
+            CustomWidth = (int)SystemParameters.PrimaryScreenWidth;
+
+            if (CustomWidth < 1366 || CustomHeight < 768)
+            {
+                MessageBox.Show("Display doesn't support these window parameters!", "Resolution error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                CustomWidth = 1366;
+                CustomHeight = 768;
+            }
         }
 
         private void MenuItem_Click_3(object sender, RoutedEventArgs e)
         {
-            CustomWidth = 1024;
-            CustomHeight = 768;
+            CustomHeight = (int)SystemParameters.PrimaryScreenHeight;
+            CustomWidth = (int)SystemParameters.PrimaryScreenWidth;
+
+            if (CustomWidth < 1024 || CustomHeight < 768)
+            {
+                MessageBox.Show("Display doesn't support these window parameters!", "Resolution error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                CustomWidth = 1024;
+                CustomHeight = 768;
+            }
         }
     }
 }
